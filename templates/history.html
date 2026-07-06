@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ ui.history }} — {{ ui.title }}</title>
+
+<!-- PWA -->
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#2d8c2d">
+<link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/static/icons/favicon-16.png">
+<link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root { --green-dark:#2d8c2d; --green-med:#2d8c2d; --green-light:#e8f5e9; --font-display:'Space Grotesk','Segoe UI',sans-serif; --font-body:'Inter','Segoe UI',sans-serif; --font-mono:'IBM Plex Mono','Courier New',monospace; }
+  body  { background:#f4f7f4; font-family:var(--font-body); }
+  h1, h2, h3, h4, h5, h6, .navbar-brand, .fw-bold { font-family: var(--font-display); }
+  .navbar { background:var(--green-dark) !important; }
+  .navbar-brand { font-weight:700; color:#fff !important; font-size:1.2rem; }
+  .badge-Severe   { background:#dc3545; color:#fff; }
+  .badge-Moderate { background:#ffc107; color:#000; }
+  .badge-Mild     { background:#0dcaf0; color:#000; }
+  .badge-None     { background:#198754; color:#fff; }
+  .sev-badge { padding:.25em .7em; border-radius:12px; font-size:.8rem; font-weight:600; }
+  .chart-wrap { background:#fff; border-radius:14px; padding:1.2rem; box-shadow:0 2px 12px #0001; }
+  .table-card { background:#fff; border-radius:14px; box-shadow:0 2px 12px #0001; overflow:hidden; }
+  .table thead th { background:var(--green-dark); color:#fff; font-weight:600; font-size:.88rem; }
+  .table tbody tr:hover { background:var(--green-light); }
+  .conf-mini { display:inline-block; width:60px; height:6px; border-radius:3px;
+               background:#e0e0e0; vertical-align:middle; overflow:hidden; }
+  .conf-fill { height:100%; border-radius:3px; background:var(--green-med); }
+</style>
+</head>
+<body>
+<nav class="navbar navbar-dark px-3 py-2">
+  <span class="navbar-brand">🍋 {{ ui.title }}</span>
+  <div class="d-flex gap-2">
+    <a href="/" class="btn btn-outline-light btn-sm">← {{ ui.detect_btn }}</a>
+    <a href="/set_lang/en" class="btn btn-outline-light btn-sm {% if lang=='en' %}active{% endif %}">EN</a>
+    <a href="/set_lang/hi" class="btn btn-outline-light btn-sm {% if lang=='hi' %}active{% endif %}">Hindi</a>
+    <a href="/set_lang/mr" class="btn btn-outline-light btn-sm {% if lang=='mr' %}active{% endif %}">Marathi</a>
+  </div>
+</nav>
+
+<div class="container py-4" style="max-width:960px">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+    <h5 class="fw-bold text-success mb-0">📋 {{ ui.history }}</h5>
+    {% if records %}
+    <form action="/history/clear" method="post" onsubmit="return confirm('Delete all {{ records|length }} prediction record(s) and their saved photos? This cannot be undone.');">
+      <button type="submit" class="btn btn-outline-danger btn-sm">🗑️ Clear History</button>
+    </form>
+    {% endif %}
+  </div>
+
+  <!-- Chart -->
+  {% if records %}
+  <div class="chart-wrap mb-4 js-intro">
+    <p class="small text-muted fw-semibold mb-2">Disease distribution (last 100 scans)</p>
+    <canvas id="distChart" height="80"></canvas>
+  </div>
+  {% endif %}
+
+  <!-- Table -->
+  <div class="table-card js-intro">
+    {% if records %}
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Timestamp</th>
+            <th>Disease</th>
+            <th>Confidence</th>
+            <th>Severity</th>
+            <th>Plot / Location</th>
+            <th>PDF</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in records %}
+          <tr>
+            <td class="text-muted small">{{ r.id }}</td>
+            <td class="small">{{ r.timestamp }}</td>
+            <td class="fw-semibold">{{ r.display }}</td>
+            <td>
+              <span class="conf-mini"><span class="conf-fill" style="width:{{ r.confidence_pct }}"></span></span>
+              <small class="ms-1">{{ r.confidence_pct }}</small>
+            </td>
+            <td>
+              <span class="sev-badge badge-{{ r.severity }}">{{ r.severity }}</span>
+            </td>
+            <td class="text-muted small">{{ r.plot_id or '—' }}</td>
+            <td>
+              <a class="btn btn-outline-success btn-sm"
+                 href="/report?disease={{ r.disease }}&confidence={{ r.confidence }}&severity={{ r.severity }}&plot_id={{ r.plot_id or '' }}&filename={{ r.filename or '' }}&timestamp={{ r.timestamp }}"
+                 target="_blank">📄</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="p-5 text-center text-muted">
+      <div style="font-size:2.5rem">🍃</div>
+      <p class="mt-2">No predictions yet. Upload a leaf image to get started.</p>
+      <a href="/" class="btn btn-success btn-sm mt-1">Go to Detector</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<script type="module">
+  import { animate } from "https://cdn.jsdelivr.net/npm/motion@11/+esm";
+
+  document.querySelectorAll('.js-intro').forEach((el, i) => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(14px)';
+    animate(
+      el,
+      { opacity: [0, 1], transform: ['translateY(14px)', 'translateY(0px)'] },
+      { type: 'spring', stiffness: 260, damping: 20, delay: i * 0.1 }
+    );
+  });
+
+  // Table rows cascade in, capped so a 100-row history doesn't take
+  // forever to finish — later rows just settle at the same small delay.
+  document.querySelectorAll('tbody tr').forEach((row, i) => {
+    row.style.opacity = '0';
+    animate(row, { opacity: [0, 1] }, { duration: 0.3, delay: 0.15 + Math.min(i, 12) * 0.03 });
+  });
+</script>
+
+{% if records %}
+<script>
+fetch('/history/data')
+  .then(r => r.json())
+  .then(data => {
+    const ctx = document.getElementById('distChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: data.map(d => d.disease.replace(/_/g,' ')),
+        datasets: [{
+          label: 'Scans',
+          data: data.map(d => d.cnt),
+          backgroundColor: '#2d8c2d88',
+          borderColor: '#2d8c2d',
+          borderWidth: 1,
+          borderRadius: 4,
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, ticks: { precision: 0 } },
+          x: { ticks: { font: { size: 11 } } }
+        }
+      }
+    });
+  });
+</script>
+{% endif %}
+</body>
+</html>
