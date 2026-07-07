@@ -14,6 +14,8 @@ from dotenv import load_dotenv
 
 load_dotenv()  # reads .env in the project root, if present
 
+
+import torch
 import torch.nn as nn
 import torchvision.models as models
 import torchvision.transforms as transforms
@@ -44,12 +46,6 @@ NOTO_BOLD    = FONTS_DIR / "NotoSansDevanagari-Bold.ttf"
 
 OPENWEATHER_API_KEY = os.environ.get("OPENWEATHER_API_KEY", "")
 DEFAULT_CITY = os.environ.get("DEFAULT_CITY", "Chhatrapati Sambhajinagar")
-
-# On very memory-constrained hosts (e.g. Render's free 512MB tier), the
-# second scene-gate model (MobileNetV2, used only to reject obvious non-leaf
-# photos like laptops/faces) can be disabled via env var, falling back to
-# the HSV color-based leaf check alone.
-DISABLE_SCENE_GATE = os.environ.get("DISABLE_SCENE_GATE", "0") == "1"
 
 # ── Class names (alphabetical - must match training) ──────────────────────────
 CLASS_NAMES = [
@@ -817,8 +813,6 @@ def scene_gate_check(raw_bytes):
     object with cumulative confidence above a low threshold. Checking top-5
     (not just top-1) catches cases like the laptop where the correct class
     appears at rank 2-3 even though rank-1 has low absolute confidence."""
-    if DISABLE_SCENE_GATE:
-        return True, "scene-gate-disabled"
     try:
         model, weights = load_scene_classifier()
         preprocess = weights.transforms()
