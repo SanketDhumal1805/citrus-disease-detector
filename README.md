@@ -1,18 +1,53 @@
-﻿
----
-title: Citrus Disease Detector
-emoji: 🍋
-colorFrom: green
-colorTo: yellow
-sdk: docker
-app_port: 7860
-pinned: false
+![Python](https://img.shields.io/badge/python-3.11-blue?logo=python&logoColor=white)
+![Flask](https://img.shields.io/badge/flask-3.0-000000?logo=flask&logoColor=white)
+![PyTorch](https://img.shields.io/badge/pytorch-2.1-EE4C2C?logo=pytorch&logoColor=white)
+![License](https://img.shields.io/badge/license-Proprietary-lightgrey)
+![Live Demo](https://img.shields.io/badge/demo-live-brightgreen?logo=huggingface&logoColor=white)
+
+# 🍋 Citrus Disease Detector V2
+
+ResNet-50 fusion model (9 classes) wrapped in a Flask app.
+Features: **Grad-CAM · Severity · Treatment Cards · PDF Report · Prediction History · Mobile Camera · Weather Risk Alerts · Multilingual (EN / हिं / मर)**
+
+### 🔗 [**Live Demo →**](https://sanketd11-citrus-disease-detector.hf.space)
+
+Upload or snap a photo of a citrus leaf and get an instant disease diagnosis with a Grad-CAM explainability heatmap, severity rating, treatment recommendations, and a downloadable PDF report — all in your browser, no install needed.
+
 ---
 
-# ðŸ‹ Citrus Disease Detector V2
+## Screenshots
 
-ResNet-50 fusion model (9 classes) wrapped in a Flask app.  
-Features: **Grad-CAM Â· Severity Â· Treatment Cards Â· PDF Report Â· Prediction History Â· Mobile Camera Â· Weather Risk Alerts Â· Multilingual (EN / à¤¹à¤¿à¤‚ / à¤®à¤°)**
+<!--
+  Add 2-3 screenshots or a short GIF here showing the app in action.
+  Suggested shots: (1) upload screen, (2) result card with Grad-CAM heatmap,
+  (3) the generated PDF report. A short screen-recording GIF of the full
+  upload → result flow works great too.
+
+  Drop the image files into a /screenshots folder in the repo, then
+  reference them like this:
+
+  ![Upload screen](screenshots/upload.png)
+  ![Detection result](screenshots/result.png)
+  ![PDF report](screenshots/report.png)
+  ## Demo
+
+![App demo](screenshots/demo.gif)
+-->
+
+*(Screenshots coming soon — [try the live demo](https://sanketd11-citrus-disease-detector.hf.space) in the meantime.)*
+
+---
+
+## Deployments
+
+This project is deployed in two places:
+
+| Platform | Purpose | Config |
+|---|---|---|
+| **[Hugging Face Spaces](https://sanketd11-citrus-disease-detector.hf.space)** | Primary live demo (Docker SDK, 2 vCPU / 16GB free tier) | `Dockerfile` |
+| **[Render](https://render.com)** | Alternative deployment option (Blueprint-based) | `render.yaml` |
+
+Both read from the same `app.py` — pick whichever config matches your target platform. The Hugging Face Space is the one linked above and kept up to date as the live demo.
 
 ---
 
@@ -29,7 +64,7 @@ source venv/bin/activate          # Windows: venv\Scripts\activate
 # 3. Install dependencies
 pip install -r requirements.txt
 
-# 4. Set environment variables (optional â€” weather feature requires key)
+# 4. Set environment variables (optional — weather feature requires key)
 cp .env.example .env
 # Edit .env and add your OpenWeatherMap API key
 
@@ -44,17 +79,20 @@ python app.py
 
 ```
 citrus_v2/
-â”œâ”€â”€ app.py                          # Flask app â€” all logic here
-â”œâ”€â”€ fusion_resnet50_v2_seed42.pth   # Trained model weights
-â”œâ”€â”€ requirements.txt
-â”œâ”€â”€ .env.example
-â”œâ”€â”€ templates/
-â”‚   â”œâ”€â”€ index.html                  # Main upload + result UI
-â”‚   â””â”€â”€ history.html                # Prediction history + chart
-â”œâ”€â”€ static/
-â”‚   â””â”€â”€ uploads/                    # Saved leaf images (auto-created)
-â””â”€â”€ instance/
-    â””â”€â”€ predictions.db              # SQLite DB (auto-created on first run)
+├── app.py                          # Flask app — all logic here
+├── results/
+│   └── fusion_resnet50_v2_seed42.pth   # Trained model weights
+├── requirements.txt
+├── render.yaml                     # Render Blueprint config
+├── Dockerfile                      # Hugging Face Spaces config
+├── .env.example
+├── templates/
+│   ├── index.html                  # Main upload + result UI
+│   └── history.html                # Prediction history + chart
+├── static/
+│   └── uploads/                    # Saved leaf images (auto-created)
+└── instance/
+    └── predictions.db              # SQLite DB (auto-created on first run)
 ```
 
 ---
@@ -79,14 +117,19 @@ location / {
 
 ## Deploy to Render (free tier)
 
-See **[DEPLOY.md](DEPLOY.md)** for the full step-by-step guide (Git LFS for
-the model file, `render.yaml` blueprint, env vars, and known free-tier
-caveats like the ephemeral disk resetting your prediction history).
-
-Quick version:
-1. Push this folder to a GitHub repo (track the `.pth` file with Git LFS).
-2. New Web Service â†’ connect repo â†’ Render auto-reads `render.yaml`.
+1. Push this folder to a GitHub repo (Git LFS tracks the `.pth` file).
+2. New Web Service → connect repo → Render auto-reads `render.yaml`.
 3. Add env var `OPENWEATHER_API_KEY` in the Render dashboard.
+
+> **Note:** Render's free tier has an ephemeral disk — the SQLite prediction history and saved leaf photos reset on every redeploy/restart. Fine for demos; migrate to a persistent disk or external DB for production use.
+
+---
+
+## Deploy to Hugging Face Spaces
+
+1. Create a new Space → SDK: **Docker**.
+2. Push this repo (including the `Dockerfile`) to the Space's git remote.
+3. Add `OPENWEATHER_API_KEY` as a Space secret (Settings → Repository secrets).
 
 ---
 
@@ -104,7 +147,7 @@ web: gunicorn -w 2 -b 0.0.0.0:$PORT app:app
 | Method | Route | Description |
 |--------|-------|-------------|
 | GET | `/` | Main UI |
-| POST | `/predict` | Upload image â†’ JSON result |
+| POST | `/predict` | Upload image → JSON result |
 | GET | `/report` | Download PDF report |
 | GET | `/history` | Prediction history page |
 | GET | `/history/data` | Disease distribution JSON |
@@ -145,27 +188,32 @@ web: gunicorn -w 2 -b 0.0.0.0:$PORT app:app
 |----------|-------|
 | Architecture | ResNet-50 |
 | Classes | 9 |
-| Input size | 224 Ã— 224 |
+| Input size | 224 × 224 |
 | Weights file | `fusion_resnet50_v2_seed42.pth` |
 | Normalisation | ImageNet mean/std |
 
-**Classes:** Anthracnose Â· Citrus_Blackspot Â· Citrus_Canker Â· Citrus_Greening_HLB Â· Citrus_Leafminer Â· Citrus_Nutrient_Deficiency Â· Healthy_Leaf Â· Multiple_Diseases Â· Young_Healthy_Leaf
+**Classes:** Anthracnose · Citrus_Blackspot · Citrus_Canker · Citrus_Greening_HLB · Citrus_Leafminer · Citrus_Nutrient_Deficiency · Healthy_Leaf · Multiple_Diseases · Young_Healthy_Leaf
 
 ---
 
 ## Environment Variables
 
 | Variable | Default | Description |
-|----------|---------|-------------|
+|----------|---------|--------------|
 | `OPENWEATHER_API_KEY` | *(empty)* | Weather risk feature (free tier API key) |
 | `DEFAULT_CITY` | `Pune` | City for weather lookup |
-| `SECRET_KEY` | hardcoded | Flask session key â€” **change in production** |
+| `SECRET_KEY` | auto-generated | Flask session key — set via platform env vars, never hardcode in production |
 
 ---
 
 ## Notes
 
-- The `.pth` file is ~94 MB. Git LFS is recommended if committing to GitHub.
-- `static/uploads/` grows over time â€” add a cron job to prune old images.
+- The `.pth` file is ~94 MB. Tracked with Git LFS.
+- `static/uploads/` grows over time — add a cron job to prune old images.
 - SQLite is fine for a single-server deployment; migrate to PostgreSQL for multi-instance.
 
+---
+
+## License
+
+Proprietary — see [LICENSE](LICENSE) for full terms.
