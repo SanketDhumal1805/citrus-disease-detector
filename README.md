@@ -201,7 +201,7 @@ web: gunicorn -w 2 -b 0.0.0.0:$PORT app:app
 | Variable | Default | Description |
 |----------|---------|--------------|
 | `OPENWEATHER_API_KEY` | *(empty)* | Weather risk feature (free tier API key) |
-| `DEFAULT_CITY` | `Pune` | City for weather lookup |
+| `DEFAULT_CITY` | `Chhatrapati Sambhajinagar` | City for weather lookup |
 | `SECRET_KEY` | auto-generated | Flask session key — set via platform env vars, never hardcode in production |
 
 ---
