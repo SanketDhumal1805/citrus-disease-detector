@@ -4,7 +4,7 @@ services:
     env: python
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn -w 2 --timeout 120 -b 0.0.0.0:$PORT app:app
+    startCommand: gunicorn -w 2 --threads 4 --timeout 120 -b 0.0.0.0:$PORT app:app
     envVars:
       - key: SECRET_KEY
         generateValue: true
@@ -14,3 +14,8 @@ services:
         value: Chhatrapati Sambhajinagar
       - key: PYTHON_VERSION
         value: 3.11.9
+      # Set to "1" in the Render dashboard if you still hit OOM after the
+      # worker/thread fixes — this skips loading the second (MobileNetV2)
+      # scene-gate model and falls back to the HSV color-based leaf check.
+      - key: DISABLE_SCENE_GATE
+        value: "0"

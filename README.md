@@ -1,3 +1,14 @@
+
+---
+title: Citrus Disease Detector
+emoji: 🍋
+colorFrom: green
+colorTo: yellow
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # 🍋 Citrus Disease Detector V2
 
 ResNet-50 fusion model (9 classes) wrapped in a Flask app.  
