@@ -15,6 +15,10 @@ from dotenv import load_dotenv
 load_dotenv()  # reads .env in the project root, if present
 
 import torch
+torch.set_num_threads(1)  # Render free tier has limited CPU/RAM; avoid PyTorch
+                          # spinning up multiple internal threads per worker.
+
+import torch
 import torch.nn as nn
 import torchvision.models as models
 import torchvision.transforms as transforms
