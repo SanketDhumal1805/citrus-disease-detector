@@ -14,7 +14,9 @@ Features: **Grad-CAM · Severity · Treatment Cards · PDF Report · Prediction 
 Upload or snap a photo of a citrus leaf and get an instant disease diagnosis with a Grad-CAM explainability heatmap, severity rating, treatment recommendations, and a downloadable PDF report — all in your browser, no install needed.
 
 ---
+  ## Demo
 
+![App demo](screenshots/demo.gif)
 ## Screenshots
 
 <!--
@@ -29,9 +31,7 @@ Upload or snap a photo of a citrus leaf and get an instant disease diagnosis wit
   ![Upload screen](screenshots/upload.png)
   ![Detection result](screenshots/result.png)
   ![PDF report](screenshots/report.png)
-  ## Demo
 
-![App demo](screenshots/demo.gif)
 -->
 
 *(Screenshots coming soon — [try the live demo](https://sanketd11-citrus-disease-detector.hf.space) in the meantime.)*
