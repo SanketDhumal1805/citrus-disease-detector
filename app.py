@@ -14,15 +14,6 @@ from dotenv import load_dotenv
 
 load_dotenv()  # reads .env in the project root, if present
 
-IST = datetime.timezone(datetime.timedelta(hours=5, minutes=30))
-
-def now_ist():
-    """Always return current time in IST (fixed UTC+5:30 offset — India has
-    no DST, so this is safe). Avoids relying on the server's system
-    timezone (cloud hosts default to UTC) or on zoneinfo's tzdata package
-    (not always present on Windows / slim Docker images)."""
-    return datetime.datetime.now(IST)
-
 
 import torch
 import torch.nn as nn
@@ -35,7 +26,7 @@ from flask import (Flask, request, render_template, jsonify,
                    send_file, session, redirect, url_for, g, send_from_directory)
 from fpdf import FPDF
 
-# â”€â”€ App setup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── App setup ─────────────────────────────────────────────────────────────────
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-only-fallback-key")
 
@@ -47,7 +38,7 @@ UPLOAD_DIR = BASE_DIR / "static" / "uploads"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 # Devanagari-capable font (Hindi / Marathi PDF reports). Helvetica (FPDF's
-# built-in font) only supports Latin-1, so à¤¹à¤¿à¤‚à¤¦à¥€/à¤®à¤°à¤¾à¤ à¥€ text would render as
+# built-in font) only supports Latin-1, so हिंदी/मराठी text would render as
 # garbage or empty boxes unless we embed a real Unicode font for those PDFs.
 FONTS_DIR    = BASE_DIR / "fonts"
 NOTO_REGULAR = FONTS_DIR / "NotoSansDevanagari-Regular.ttf"
@@ -56,7 +47,7 @@ NOTO_BOLD    = FONTS_DIR / "NotoSansDevanagari-Bold.ttf"
 OPENWEATHER_API_KEY = os.environ.get("OPENWEATHER_API_KEY", "")
 DEFAULT_CITY = os.environ.get("DEFAULT_CITY", "Chhatrapati Sambhajinagar")
 
-# â”€â”€ Class names (alphabetical - must match training) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── Class names (alphabetical - must match training) ──────────────────────────
 CLASS_NAMES = [
     "Anthracnose",
     "Citrus_Blackspot",
@@ -82,30 +73,30 @@ DISPLAY_NAMES = {
         "Young_Healthy_Leaf":        "Young Healthy Leaf",
     },
     "hi": {
-        "Anthracnose":               "à¤à¤¨à¥à¤¥à¥à¤°à¥‡à¤•à¤¨à¥‹à¤œ",
-        "Citrus_Blackspot":          "à¤¸à¤¾à¤‡à¤Ÿà¥à¤°à¤¸ à¤•à¤¾à¤²à¤¾ à¤§à¤¬à¥à¤¬à¤¾",
-        "Citrus_Canker":             "à¤¸à¤¾à¤‡à¤Ÿà¥à¤°à¤¸ à¤•à¥ˆà¤‚à¤•à¤°",
-        "Citrus_Greening_HLB":       "à¤¸à¤¾à¤‡à¤Ÿà¥à¤°à¤¸ à¤—à¥à¤°à¥€à¤¨à¤¿à¤‚à¤— (HLB)",
-        "Citrus_Leafminer":          "à¤¸à¤¾à¤‡à¤Ÿà¥à¤°à¤¸ à¤ªà¤¤à¥à¤¤à¥€ à¤–à¤¨à¤•",
-        "Citrus_Nutrient_Deficiency":"à¤ªà¥‹à¤·à¤• à¤¤à¤¤à¥à¤µ à¤•à¥€ à¤•à¤®à¥€",
-        "Healthy_Leaf":              "à¤¸à¥à¤µà¤¸à¥à¤¥ à¤ªà¤¤à¥à¤¤à¥€",
-        "Multiple_Diseases":         "à¤à¤•à¤¾à¤§à¤¿à¤• à¤°à¥‹à¤—",
-        "Young_Healthy_Leaf":        "à¤¯à¥à¤µà¤¾ à¤¸à¥à¤µà¤¸à¥à¤¥ à¤ªà¤¤à¥à¤¤à¥€",
+        "Anthracnose":               "एन्थ्रेकनोज",
+        "Citrus_Blackspot":          "साइट्रस काला धब्बा",
+        "Citrus_Canker":             "साइट्रस कैंकर",
+        "Citrus_Greening_HLB":       "साइट्रस ग्रीनिंग (HLB)",
+        "Citrus_Leafminer":          "साइट्रस पत्ती खनक",
+        "Citrus_Nutrient_Deficiency":"पोषक तत्व की कमी",
+        "Healthy_Leaf":              "स्वस्थ पत्ती",
+        "Multiple_Diseases":         "एकाधिक रोग",
+        "Young_Healthy_Leaf":        "युवा स्वस्थ पत्ती",
     },
     "mr": {
-        "Anthracnose":               "à¤…à¤à¤¥à¥à¤°à¥…à¤•à¤¨à¥‹à¤œ",
-        "Citrus_Blackspot":          "à¤²à¤¿à¤‚à¤¬à¥‚ à¤•à¤¾à¤³à¥‡ à¤¡à¤¾à¤—",
-        "Citrus_Canker":             "à¤²à¤¿à¤‚à¤¬à¥‚ à¤•à¤à¤•à¤°",
-        "Citrus_Greening_HLB":       "à¤²à¤¿à¤‚à¤¬à¥‚ à¤—à¥à¤°à¥€à¤¨à¤¿à¤‚à¤— (HLB)",
-        "Citrus_Leafminer":          "à¤²à¤¿à¤‚à¤¬à¥‚ à¤ªà¤¾à¤¨à¤–à¤¾à¤Š à¤•à¥€à¤¡",
-        "Citrus_Nutrient_Deficiency":"à¤ªà¥‹à¤·à¤• à¤¤à¤¤à¥à¤µà¤¾à¤‚à¤šà¥€ à¤•à¤®à¤¤à¤°à¤¤à¤¾",
-        "Healthy_Leaf":              "à¤¨à¤¿à¤°à¥‹à¤—à¥€ à¤ªà¤¾à¤¨",
-        "Multiple_Diseases":         "à¤à¤•à¤¾à¤§à¤¿à¤• à¤°à¥‹à¤—",
-        "Young_Healthy_Leaf":        "à¤¤à¤°à¥à¤£ à¤¨à¤¿à¤°à¥‹à¤—à¥€ à¤ªà¤¾à¤¨",
+        "Anthracnose":               "अँथ्रॅकनोज",
+        "Citrus_Blackspot":          "लिंबू काळे डाग",
+        "Citrus_Canker":             "लिंबू कँकर",
+        "Citrus_Greening_HLB":       "लिंबू ग्रीनिंग (HLB)",
+        "Citrus_Leafminer":          "लिंबू पानखाऊ कीड",
+        "Citrus_Nutrient_Deficiency":"पोषक तत्वांची कमतरता",
+        "Healthy_Leaf":              "निरोगी पान",
+        "Multiple_Diseases":         "एकाधिक रोग",
+        "Young_Healthy_Leaf":        "तरुण निरोगी पान",
     },
 }
 
-# â”€â”€ PDF report labels (structural text, not disease content) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── PDF report labels (structural text, not disease content) ─────────────────
 # Note: the treatment paragraph text itself (cause/pesticide/prevention/
 # recovery sentences in TREATMENTS below) is only authored in English. These
 # labels translate the report's headings/scaffolding; if you also want the
@@ -130,36 +121,36 @@ PDF_LABELS = {
         "sev_values":        {"Severe": "Severe", "Moderate": "Moderate", "Mild": "Mild", "None": "None"},
     },
     "hi": {
-        "title":             "à¤¸à¤¾à¤‡à¤Ÿà¥à¤°à¤¸ à¤°à¥‹à¤— à¤¡à¤¿à¤Ÿà¥‡à¤•à¥à¤¶à¤¨ à¤°à¤¿à¤ªà¥‹à¤°à¥à¤Ÿ",
-        "date_time":         "à¤¦à¤¿à¤¨à¤¾à¤‚à¤• / à¤¸à¤®à¤¯",
-        "plot_location":     "à¤ªà¥à¤²à¥‰à¤Ÿ / à¤¸à¥à¤¥à¤¾à¤¨",
-        "not_specified":     "à¤¨à¤¿à¤°à¥à¤¦à¤¿à¤·à¥à¤Ÿ à¤¨à¤¹à¥€à¤‚",
-        "prediction":        "à¤ªà¥‚à¤°à¥à¤µà¤¾à¤¨à¥à¤®à¤¾à¤¨",
-        "confidence":        "à¤µà¤¿à¤¶à¥à¤µà¤¾à¤¸",
-        "severity":          "à¤—à¤‚à¤­à¥€à¤°à¤¤à¤¾",
-        "gradcam":           "à¤—à¥à¤°à¥ˆà¤¡-à¤•à¥ˆà¤® à¤¹à¥€à¤Ÿà¤®à¥ˆà¤ª",
-        "treatment_heading": "à¤‰à¤ªà¤šà¤¾à¤° à¤à¤µà¤‚ à¤ªà¥à¤°à¤¬à¤‚à¤§à¤¨",
-        "cause":             "à¤•à¤¾à¤°à¤£",
-        "pesticide":         "à¤…à¤¨à¥à¤¶à¤‚à¤¸à¤¿à¤¤ à¤‰à¤ªà¤šà¤¾à¤°",
-        "prevention":        "à¤°à¥‹à¤•à¤¥à¤¾à¤®",
-        "recovery":          "à¤…à¤ªà¥‡à¤•à¥à¤·à¤¿à¤¤ à¤¸à¥à¤§à¤¾à¤°",
-        "sev_values":        {"Severe": "à¤—à¤‚à¤­à¥€à¤°", "Moderate": "à¤®à¤§à¥à¤¯à¤®", "Mild": "à¤¹à¤²à¥à¤•à¤¾", "None": "à¤•à¥‹à¤ˆ à¤¨à¤¹à¥€à¤‚"},
+        "title":             "साइट्रस रोग डिटेक्शन रिपोर्ट",
+        "date_time":         "दिनांक / समय",
+        "plot_location":     "प्लॉट / स्थान",
+        "not_specified":     "निर्दिष्ट नहीं",
+        "prediction":        "पूर्वानुमान",
+        "confidence":        "विश्वास",
+        "severity":          "गंभीरता",
+        "gradcam":           "ग्रैड-कैम हीटमैप",
+        "treatment_heading": "उपचार एवं प्रबंधन",
+        "cause":             "कारण",
+        "pesticide":         "अनुशंसित उपचार",
+        "prevention":        "रोकथाम",
+        "recovery":          "अपेक्षित सुधार",
+        "sev_values":        {"Severe": "गंभीर", "Moderate": "मध्यम", "Mild": "हल्का", "None": "कोई नहीं"},
     },
     "mr": {
-        "title":             "à¤²à¤¿à¤‚à¤¬à¥‚ à¤°à¥‹à¤— à¤¡à¤¿à¤Ÿà¥‡à¤•à¥à¤¶à¤¨ à¤…à¤¹à¤µà¤¾à¤²",
-        "date_time":         "à¤¦à¤¿à¤¨à¤¾à¤‚à¤• / à¤µà¥‡à¤³",
-        "plot_location":     "à¤ªà¥à¤²à¥‰à¤Ÿ / à¤¸à¥à¤¥à¤¾à¤¨",
-        "not_specified":     "à¤¨à¤®à¥‚à¤¦ à¤•à¥‡à¤²à¥‡à¤²à¥‡ à¤¨à¤¾à¤¹à¥€",
-        "prediction":        "à¤…à¤‚à¤¦à¤¾à¤œ",
-        "confidence":        "à¤†à¤¤à¥à¤®à¤µà¤¿à¤¶à¥à¤µà¤¾à¤¸",
-        "severity":          "à¤¤à¥€à¤µà¥à¤°à¤¤à¤¾",
-        "gradcam":           "à¤—à¥à¤°à¥…à¤¡-à¤•à¥…à¤® à¤¹à¥€à¤Ÿà¤®à¥…à¤ª",
-        "treatment_heading": "à¤‰à¤ªà¤šà¤¾à¤° à¤†à¤£à¤¿ à¤µà¥à¤¯à¤µà¤¸à¥à¤¥à¤¾à¤ªà¤¨",
-        "cause":             "à¤•à¤¾à¤°à¤£",
-        "pesticide":         "à¤¶à¤¿à¤«à¤¾à¤°à¤¸ à¤•à¥‡à¤²à¥‡à¤²à¤¾ à¤‰à¤ªà¤šà¤¾à¤°",
-        "prevention":        "à¤ªà¥à¤°à¤¤à¤¿à¤¬à¤‚à¤§",
-        "recovery":          "à¤…à¤ªà¥‡à¤•à¥à¤·à¤¿à¤¤ à¤¸à¥à¤§à¤¾à¤°à¤£à¤¾",
-        "sev_values":        {"Severe": "à¤¤à¥€à¤µà¥à¤°", "Moderate": "à¤®à¤§à¥à¤¯à¤®", "Mild": "à¤¸à¥Œà¤®à¥à¤¯", "None": "à¤•à¤¾à¤¹à¥€à¤¹à¥€ à¤¨à¤¾à¤¹à¥€"},
+        "title":             "लिंबू रोग डिटेक्शन अहवाल",
+        "date_time":         "दिनांक / वेळ",
+        "plot_location":     "प्लॉट / स्थान",
+        "not_specified":     "नमूद केलेले नाही",
+        "prediction":        "अंदाज",
+        "confidence":        "आत्मविश्वास",
+        "severity":          "तीव्रता",
+        "gradcam":           "ग्रॅड-कॅम हीटमॅप",
+        "treatment_heading": "उपचार आणि व्यवस्थापन",
+        "cause":             "कारण",
+        "pesticide":         "शिफारस केलेला उपचार",
+        "prevention":        "प्रतिबंध",
+        "recovery":          "अपेक्षित सुधारणा",
+        "sev_values":        {"Severe": "तीव्र", "Moderate": "मध्यम", "Mild": "सौम्य", "None": "काहीही नाही"},
     },
 }
 
@@ -248,44 +239,44 @@ UI = {
         "healthy_msg":    "Your citrus plant looks healthy!",
     },
     "hi": {
-        "title":          "à¤¸à¤¾à¤‡à¤Ÿà¥à¤°à¤¸ à¤°à¥‹à¤— à¤¡à¤¿à¤Ÿà¥‡à¤•à¥à¤Ÿà¤°",
-        "upload_prompt":  "à¤¸à¤¾à¤‡à¤Ÿà¥à¤°à¤¸ à¤ªà¤¤à¥à¤¤à¥€ à¤•à¥€ à¤«à¥‹à¤Ÿà¥‹ à¤…à¤ªà¤²à¥‹à¤¡ à¤•à¤°à¥‡à¤‚ à¤¯à¤¾ à¤²à¥‡à¤‚",
-        "detect_btn":     "à¤°à¥‹à¤— à¤ªà¤¹à¤šà¤¾à¤¨à¥‡à¤‚",
-        "result_heading": "à¤ªà¤¹à¤šà¤¾à¤¨ à¤ªà¤°à¤¿à¤£à¤¾à¤®",
-        "severity":       "à¤—à¤‚à¤­à¥€à¤°à¤¤à¤¾",
-        "confidence":     "à¤µà¤¿à¤¶à¥à¤µà¤¾à¤¸",
-        "cause":          "à¤•à¤¾à¤°à¤£",
-        "pesticide":      "à¤…à¤¨à¥à¤¶à¤‚à¤¸à¤¿à¤¤ à¤‰à¤ªà¤šà¤¾à¤°",
-        "prevention":     "à¤°à¥‹à¤•à¤¥à¤¾à¤®",
-        "recovery":       "à¤…à¤ªà¥‡à¤•à¥à¤·à¤¿à¤¤ à¤¸à¥à¤§à¤¾à¤°",
-        "download_pdf":   "PDF à¤°à¤¿à¤ªà¥‹à¤°à¥à¤Ÿ à¤¡à¤¾à¤‰à¤¨à¤²à¥‹à¤¡ à¤•à¤°à¥‡à¤‚",
-        "history":        "à¤ªà¥‚à¤°à¥à¤µà¤¾à¤¨à¥à¤®à¤¾à¤¨ à¤‡à¤¤à¤¿à¤¹à¤¾à¤¸",
-        "weather_risk":   "à¤®à¥Œà¤¸à¤® à¤°à¥‹à¤— à¤œà¥‹à¤–à¤¿à¤®",
-        "lang_label":     "à¤­à¤¾à¤·à¤¾",
-        "healthy_msg":    "à¤†à¤ªà¤•à¤¾ à¤¸à¤¾à¤‡à¤Ÿà¥à¤°à¤¸ à¤ªà¥Œà¤§à¤¾ à¤¸à¥à¤µà¤¸à¥à¤¥ à¤¦à¤¿à¤–à¤¤à¤¾ à¤¹à¥ˆ!",
+        "title":          "साइट्रस रोग डिटेक्टर",
+        "upload_prompt":  "साइट्रस पत्ती की फोटो अपलोड करें या लें",
+        "detect_btn":     "रोग पहचानें",
+        "result_heading": "पहचान परिणाम",
+        "severity":       "गंभीरता",
+        "confidence":     "विश्वास",
+        "cause":          "कारण",
+        "pesticide":      "अनुशंसित उपचार",
+        "prevention":     "रोकथाम",
+        "recovery":       "अपेक्षित सुधार",
+        "download_pdf":   "PDF रिपोर्ट डाउनलोड करें",
+        "history":        "पूर्वानुमान इतिहास",
+        "weather_risk":   "मौसम रोग जोखिम",
+        "lang_label":     "भाषा",
+        "healthy_msg":    "आपका साइट्रस पौधा स्वस्थ दिखता है!",
     },
     "mr": {
-        "title":          "à¤²à¤¿à¤‚à¤¬à¥‚ à¤°à¥‹à¤— à¤¡à¤¿à¤Ÿà¥‡à¤•à¥à¤Ÿà¤°",
-        "upload_prompt":  "à¤²à¤¿à¤‚à¤¬à¥‚ à¤ªà¤¾à¤¨à¤¾à¤šà¤¾ à¤«à¥‹à¤Ÿà¥‹ à¤…à¤ªà¤²à¥‹à¤¡ à¤•à¤°à¤¾ à¤•à¤¿à¤‚à¤µà¤¾ à¤˜à¥à¤¯à¤¾",
-        "detect_btn":     "à¤°à¥‹à¤— à¤“à¤³à¤–à¤¾",
-        "result_heading": "à¤“à¤³à¤– à¤¨à¤¿à¤•à¤¾à¤²",
-        "severity":       "à¤¤à¥€à¤µà¥à¤°à¤¤à¤¾",
-        "confidence":     "à¤†à¤¤à¥à¤®à¤µà¤¿à¤¶à¥à¤µà¤¾à¤¸",
-        "cause":          "à¤•à¤¾à¤°à¤£",
-        "pesticide":      "à¤¶à¤¿à¤«à¤¾à¤°à¤¸ à¤•à¥‡à¤²à¥‡à¤²à¤¾ à¤‰à¤ªà¤šà¤¾à¤°",
-        "prevention":     "à¤ªà¥à¤°à¤¤à¤¿à¤¬à¤‚à¤§",
-        "recovery":       "à¤…à¤ªà¥‡à¤•à¥à¤·à¤¿à¤¤ à¤¸à¥à¤§à¤¾à¤°à¤£à¤¾",
-        "download_pdf":   "PDF à¤…à¤¹à¤µà¤¾à¤² à¤¡à¤¾à¤‰à¤¨à¤²à¥‹à¤¡ à¤•à¤°à¤¾",
-        "history":        "à¤…à¤‚à¤¦à¤¾à¤œ à¤‡à¤¤à¤¿à¤¹à¤¾à¤¸",
-        "weather_risk":   "à¤¹à¤µà¤¾à¤®à¤¾à¤¨ à¤°à¥‹à¤— à¤§à¥‹à¤•à¤¾",
-        "lang_label":     "à¤­à¤¾à¤·à¤¾",
-        "healthy_msg":    "à¤¤à¥à¤®à¤šà¥‡ à¤²à¤¿à¤‚à¤¬à¥‚ à¤à¤¾à¤¡ à¤¨à¤¿à¤°à¥‹à¤—à¥€ à¤¦à¤¿à¤¸à¤¤ à¤†à¤¹à¥‡!",
+        "title":          "लिंबू रोग डिटेक्टर",
+        "upload_prompt":  "लिंबू पानाचा फोटो अपलोड करा किंवा घ्या",
+        "detect_btn":     "रोग ओळखा",
+        "result_heading": "ओळख निकाल",
+        "severity":       "तीव्रता",
+        "confidence":     "आत्मविश्वास",
+        "cause":          "कारण",
+        "pesticide":      "शिफारस केलेला उपचार",
+        "prevention":     "प्रतिबंध",
+        "recovery":       "अपेक्षित सुधारणा",
+        "download_pdf":   "PDF अहवाल डाउनलोड करा",
+        "history":        "अंदाज इतिहास",
+        "weather_risk":   "हवामान रोग धोका",
+        "lang_label":     "भाषा",
+        "healthy_msg":    "तुमचे लिंबू झाड निरोगी दिसत आहे!",
     },
 }
 
-# â”€â”€ PDF helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── PDF helper ────────────────────────────────────────────────────────────────
 # English PDFs use FPDF's built-in Helvetica font, which only supports
-# Latin-1 â€” so English text still gets stripped to Latin-1 to avoid crashes.
+# Latin-1 — so English text still gets stripped to Latin-1 to avoid crashes.
 # Hindi/Marathi PDFs use the embedded Noto Sans Devanagari font instead
 # (see make_pdf), which is full Unicode, so their text passes through as-is.
 def _pdf_safe(text, unicode_font=False):
@@ -301,7 +292,7 @@ def devanagari_fonts_available():
     return NOTO_REGULAR.exists() and NOTO_BOLD.exists()
 
 
-# â”€â”€ Model loading â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── Model loading ─────────────────────────────────────────────────────────────
 @lru_cache(maxsize=1)
 def load_model():
     model = models.resnet50(weights=None)
@@ -323,16 +314,16 @@ def load_model():
     return model
 
 
-# â”€â”€ NDVI loading â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── NDVI loading ──────────────────────────────────────────────────────────────
 @lru_cache(maxsize=1)
 def load_ndvi():
-    ndvi_raw = np.load(str(NDVI_PATH), allow_pickle=True).astype(np.float32)
+    ndvi_raw = np.load(str(NDVI_PATH)).astype(np.float32)
     ndvi_raw = np.clip(ndvi_raw, 0, 1)
     ndvi_norm = (ndvi_raw - ndvi_raw.min()) / (ndvi_raw.max() - ndvi_raw.min() + 1e-5)
     return ndvi_norm
 
 
-# â”€â”€ Leaf auto-crop â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── Leaf auto-crop ────────────────────────────────────────────────────────────
 def crop_to_leaf(img_pil, pad_frac=0.08):
     """Crop the photo down to the leaf's bounding box so it fills the frame
     the way training images do, instead of squashing the whole scene
@@ -365,7 +356,7 @@ def crop_to_leaf(img_pil, pad_frac=0.08):
     return Image.fromarray(arr[y0:y1, x0:x1])
 
 
-# â”€â”€ Image loading (EXIF-safe) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── Image loading (EXIF-safe) ───────────────────────────────────────────────
 def open_image_upright(raw_bytes):
     """Open image bytes as PIL RGB, correcting for EXIF orientation.
     Phone cameras store photos with an orientation tag rather than
@@ -379,7 +370,7 @@ def open_image_upright(raw_bytes):
     return img.convert("RGB")
 
 
-# â”€â”€ Preprocessing â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── Preprocessing ─────────────────────────────────────────────────────────────
 def preprocess_image(raw_bytes, use_crop=True):
     img_pil = open_image_upright(raw_bytes)
     if use_crop:
@@ -405,7 +396,7 @@ def preprocess_image(raw_bytes, use_crop=True):
     return fused.unsqueeze(0)
 
 
-# â”€â”€ Grad-CAM â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── Grad-CAM ──────────────────────────────────────────────────────────────────
 def generate_gradcam(model, img_tensor_4ch, class_idx):
     features, grads = {}, {}
 
@@ -448,7 +439,7 @@ def generate_gradcam(model, img_tensor_4ch, class_idx):
     return base64.b64encode(buf.getvalue()).decode()
 
 
-# â”€â”€ Severity â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── Severity ──────────────────────────────────────────────────────────────────
 def get_severity(confidence, is_disease):
     if not is_disease:
         return "None", "success"
@@ -460,13 +451,13 @@ def get_severity(confidence, is_disease):
         return "Mild", "info"
 
 
-# â”€â”€ NDVI satellite context panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── NDVI satellite context panel ────────────────────────────────────────────
 # This renders the ONE real Sentinel-2 NDVI tile we have (the same array the
 # model's 4th input channel uses) as an honest, clearly-labeled REGIONAL
 # vegetation-context visual for the user/agronomist. It is NOT a per-leaf
 # measurement and is NOT recomputed per prediction - it's the same static
 # scene the model was trained against, shown for transparency/context only.
-NDVI_SOURCE_LABEL = "Sentinel-2 L2A NDVI â€” Nagpur Agricultural Region, Maharashtra (2023-02-12)"
+NDVI_SOURCE_LABEL = "Sentinel-2 L2A NDVI — Nagpur Agricultural Region, Maharashtra (2023-02-12)"
 
 def _ndvi_to_rgb(ndvi_norm):
     """Map a 0-1 normalised NDVI array to an RdYlGn-style colour image
@@ -522,7 +513,7 @@ def get_ndvi_context():
     }
 
 
-# â”€â”€ Weather â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── Weather ───────────────────────────────────────────────────────────────────
 def get_weather_risk(lat=19.8993, lon=75.3195, city="Chhatrapati Sambhajinagar"):
     if not OPENWEATHER_API_KEY:
         return None
@@ -549,12 +540,12 @@ def get_weather_risk(lat=19.8993, lon=75.3195, city="Chhatrapati Sambhajinagar")
         return None
 
 
-# â”€â”€ PDF report â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── PDF report ────────────────────────────────────────────────────────────────
 def make_pdf(disease, display_name, confidence, severity, treatment,
              cam_b64, timestamp, plot_id, lang="en"):
     labels = PDF_LABELS.get(lang, PDF_LABELS["en"])
 
-    # Use the embedded Unicode Devanagari font for hi/mr so à¤¹à¤¿à¤‚à¤¦à¥€/à¤®à¤°à¤¾à¤ à¥€ text
+    # Use the embedded Unicode Devanagari font for hi/mr so हिंदी/मराठी text
     # renders correctly; otherwise stick to FPDF's built-in Helvetica.
     use_unicode = lang in ("hi", "mr") and devanagari_fonts_available()
     FONT = "NotoDev" if use_unicode else "Helvetica"
@@ -571,7 +562,7 @@ def make_pdf(disease, display_name, confidence, severity, treatment,
         # No italic weight embedded; fall back to regular for "I" style.
         pdf.add_font("NotoDev", "I", str(NOTO_REGULAR))
 
-    # â”€â”€ Header banner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # ── Header banner ─────────────────────────────────────────────────────────
     pdf.set_fill_color(45, 140, 45)          # --green-dark
     pdf.rect(0, 0, 210, 30, "F")
     pdf.set_y(10)
@@ -581,7 +572,7 @@ def make_pdf(disease, display_name, confidence, severity, treatment,
     pdf.set_text_color(0, 0, 0)
     pdf.ln(8)
 
-    # â”€â”€ Meta row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # ── Meta row ──────────────────────────────────────────────────────────────
     pdf.set_font(FONT, "", 10)
     pdf.set_text_color(80, 80, 80)
     pdf.cell(95, 6, safe(f"{labels['date_time']} : {timestamp}"), ln=0)
@@ -591,7 +582,7 @@ def make_pdf(disease, display_name, confidence, severity, treatment,
     pdf.line(pdf.l_margin, pdf.get_y() + 2, 210 - pdf.r_margin, pdf.get_y() + 2)
     pdf.ln(6)
 
-    # â”€â”€ Grad-CAM image (left) + prediction summary (right) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # ── Grad-CAM image (left) + prediction summary (right) ───────────────────
     cam_w = 75
     has_cam = False
     cam_path = "/tmp/cam_tmp.png"
@@ -614,7 +605,7 @@ def make_pdf(disease, display_name, confidence, severity, treatment,
     info_x = pdf.get_x()
     info_w = 210 - pdf.r_margin - info_x
 
-    # â”€â”€ Prediction heading â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # ── Prediction heading ────────────────────────────────────────────────────
     pdf.set_font(FONT, "B", 11)
     pdf.set_text_color(80, 80, 80)
     pdf.cell(info_w, 7, safe(labels["prediction"]), ln=True)
@@ -632,7 +623,7 @@ def make_pdf(disease, display_name, confidence, severity, treatment,
     pdf.cell(info_w, 7, safe(f"{labels['confidence']} : {confidence*100:.1f}%"), ln=True)
     pdf.set_xy(info_x, pdf.get_y() + 3)
 
-    # Severity badge â€” pick text color for contrast
+    # Severity badge — pick text color for contrast
     sev_bg = {
         "Severe":   (220, 53,  69),
         "Moderate": (230, 130,  0),   # darker orange instead of yellow
@@ -657,7 +648,7 @@ def make_pdf(disease, display_name, confidence, severity, treatment,
     pdf.ln(6)
     pdf.set_text_color(0, 0, 0)
 
-    # â”€â”€ Section heading helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # ── Section heading helper ────────────────────────────────────────────────
     def section_heading(title):
         pdf.set_fill_color(45, 140, 45)
         pdf.set_text_color(255, 255, 255)
@@ -666,7 +657,7 @@ def make_pdf(disease, display_name, confidence, severity, treatment,
         pdf.set_text_color(0, 0, 0)
         pdf.ln(1)
 
-    # â”€â”€ Treatment table â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # ── Treatment table ───────────────────────────────────────────────────────
     section_heading(labels["treatment_heading"])
     page_w  = pdf.w - pdf.l_margin - pdf.r_margin
     label_w = 58
@@ -698,7 +689,7 @@ def make_pdf(disease, display_name, confidence, severity, treatment,
     return buf
 
 
-# â”€â”€ Database â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── Database ──────────────────────────────────────────────────────────────────
 def get_db():
     if "db" not in g:
         DB_PATH.parent.mkdir(exist_ok=True)
@@ -733,7 +724,7 @@ def close_db(e=None):
         db.close()
 
 
-# â”€â”€ Leaf image validator â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── Leaf image validator ───────────────────────────────────────────────────────
 def is_valid_leaf_image(raw_bytes):
     """
     Returns (is_valid, reason).
@@ -778,9 +769,9 @@ def is_valid_leaf_image(raw_bytes):
         return False, f"Could not read image: {str(e)}"
 
 
-# â”€â”€ Scene gate: is this even a plant/leaf photo at all? â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── Scene gate: is this even a plant/leaf photo at all? ────────────────────────
 # Color heuristics (above) only check "does this photo contain green/brown
-# pixels" â€” which almost anything can satisfy (laptops, code editors, wood
+# pixels" — which almost anything can satisfy (laptops, code editors, wood
 # furniture, walls, clothing, skin, etc). To actually catch "this is a
 # laptop" or "this is a logo", we need a model that understands *objects*,
 # not just colors. We use a small pretrained ImageNet classifier (ships
@@ -840,7 +831,7 @@ def scene_gate_check(raw_bytes):
 
         # Accumulate probability mass from non-leaf classes across all top-5.
         # If enough of the model's probability is going to known non-plant
-        # objects, reject â€” even if no single prediction crosses 0.25.
+        # objects, reject — even if no single prediction crosses 0.25.
         non_leaf_mass = 0.0
         top_non_leaf  = None
         for label, prob in zip(top_labels, top_probs):
@@ -866,7 +857,7 @@ def scene_gate_check(raw_bytes):
         return True, "scene-gate-unavailable"
 
 
-# â”€â”€ Routes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── Routes ────────────────────────────────────────────────────────────────────
 @app.route("/set_lang/<lang>")
 def set_lang(lang):
     if lang in ("en", "hi", "mr"):
@@ -882,7 +873,7 @@ def pwa_manifest():
 
 @app.route("/sw.js")
 def service_worker():
-    """Service worker MUST be served from root scope (not /static/sw.js) â€”
+    """Service worker MUST be served from root scope (not /static/sw.js) —
     otherwise its default scope would only cover /static/, and 'Add to
     Home Screen' installability would not apply to the whole app."""
     response = send_from_directory(BASE_DIR, "sw.js", mimetype="application/javascript")
@@ -907,7 +898,7 @@ def weather_data():
     if weather is None:
         return jsonify(available=False)
     weather["available"] = True
-    weather["fetched_at"] = now_ist().strftime("%H:%M:%S")
+    weather["fetched_at"] = datetime.datetime.now().strftime("%H:%M:%S")
     return jsonify(weather)
 
 
@@ -922,7 +913,7 @@ def predict():
     if not file.filename:
         return jsonify(error="Empty filename"), 400
 
-    ts_str    = now_ist().strftime("%Y%m%d_%H%M%S")
+    ts_str    = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     fname     = f"{ts_str}_{file.filename}"
     save_path = UPLOAD_DIR / fname
     file.seek(0)
@@ -949,7 +940,7 @@ def predict():
                 "is_disease": False,
             },
             cam_image=None,
-            timestamp=now_ist().strftime("%Y-%m-%d %H:%M:%S"),
+            timestamp=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             plot_id=plot_id,
             top3=[],
             ui=UI[lang],
@@ -957,10 +948,10 @@ def predict():
             filename=fname,
         )
 
-    # Validate image before prediction â€” two gates:
+    # Validate image before prediction — two gates:
     # 1) color heuristic (cheap, catches blank/dark/no-green-or-brown images)
     # 2) pretrained scene classifier (catches actual non-plant OBJECTS like
-    #    laptops, logos, faces, furniture â€” things color alone can't rule out)
+    #    laptops, logos, faces, furniture — things color alone can't rule out)
     valid, reason = is_valid_leaf_image(raw_bytes)
     if not valid:
         return reject_response(reason)
@@ -998,7 +989,7 @@ def predict():
     treatment           = TREATMENTS[disease]
     severity, sev_class = get_severity(confidence, treatment["is_disease"])
     display             = DISPLAY_NAMES[lang].get(disease, disease)
-    timestamp           = now_ist().strftime("%Y-%m-%d %H:%M:%S")
+    timestamp           = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     db = get_db()
     db.execute(
@@ -1051,7 +1042,7 @@ def download_report():
     plot_id    = request.args.get("plot_id", "")
     filename   = request.args.get("filename", "")
     timestamp  = request.args.get("timestamp",
-                  now_ist().strftime("%Y-%m-%d %H:%M:%S"))
+                  datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
     cam_b64 = None
     try:
@@ -1123,7 +1114,7 @@ def clear_history():
     return redirect(url_for("history"))
 
 
-# â”€â”€ Startup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ── Startup ───────────────────────────────────────────────────────────────────
 with app.app_context():
     init_db()
 
